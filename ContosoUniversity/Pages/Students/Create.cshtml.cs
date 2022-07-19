@@ -31,15 +31,33 @@ namespace ContosoUniversity.Pages.Students
         // To protect from overposting attacks, see https://aka.ms/RazorPagesCRUD
         public async Task<IActionResult> OnPostAsync()
         {
-          if (!ModelState.IsValid || _context.Students == null || Student == null)
+            //Control Overposting with the TryUpdateModelAsync
+            var emptyStudent = new Student();
+
+            if (await TryUpdateModelAsync<Student>(
+                emptyStudent,
+                "student",   // Prefix for form value.
+                s => s.FirstMidName, s => s.LastName, s => s.EnrollmentDate))
             {
-                return Page();
+                _context.Students.Add(emptyStudent);
+                await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
             }
 
-            _context.Students.Add(Student);
-            await _context.SaveChangesAsync();
+            return Page();
 
-            return RedirectToPage("./Index");
+            /*This would allow overposting with tools such as Fiddler
+             More on overposting => https://docs.microsoft.com/en-us/aspnet/core/data/ef-rp/crud?view=aspnetcore-6.0#overposting
+             */
+            //if (!ModelState.IsValid || _context.Students == null || Student == null)
+            //  {
+            //      return Page();
+            //  }
+
+            //  _context.Students.Add(Student);
+            //  await _context.SaveChangesAsync();
+
+            //  return RedirectToPage("./Index");
         }
     }
 }
